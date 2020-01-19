@@ -22,7 +22,6 @@ class MainActivity : Activity() {
     private lateinit var cameraCapture: CameraCapture
     private lateinit var cameraInfo: CameraInfo
     private lateinit var viewTransform: ViewTransform
-    private lateinit var deviceOrientationListener: DeviceOrientationListener
     private var cameraFacing = CameraCharacteristics.LENS_FACING_FRONT
 
     val surfaces: List<Surface>
@@ -57,8 +56,7 @@ class MainActivity : Activity() {
 
         cameraCapture = CameraCapture(
             this,
-            cameraManager,
-            ImageOrientation(windowManager.defaultDisplay.rotation, cameraInfo)
+            cameraManager
         )
 
         viewTransform = ViewTransform(
@@ -66,8 +64,6 @@ class MainActivity : Activity() {
             cameraView,
             cameraInfo
         )
-
-        deviceOrientationListener = DeviceOrientationListener(this)
     }
 
     override fun onResume() {
@@ -100,6 +96,7 @@ class MainActivity : Activity() {
                     width: Int,
                     height: Int
                 ) {
+                    Log.d(TAG, "#onSurfaceTextureSizeChanged")
                     viewTransform.transform(width, height)
                 }
 

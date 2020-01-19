@@ -23,8 +23,7 @@ private const val TAG: String = "CV\$CAMERA_OPERATOR"
 
 class CameraCapture(
     private val context: Context,
-    private val cameraManager: CameraManager,
-    private val imageOrientation: ImageOrientation
+    private val cameraManager: CameraManager
 ) {
     private val deviceStateCallback: CameraDevice.StateCallback
     private val captureCallback: CaptureCallback
@@ -125,13 +124,6 @@ class CameraCapture(
                         CaptureRequest.CONTROL_AE_MODE,
                         CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
                     )
-
-                    /*
-                    captureRequestBuilder.set(
-                        CaptureRequest.JPEG_ORIENTATION,
-                        imageOrientation.calculate()
-                    )
-                     */
 
                     captureRequest = captureRequestBuilder.build()
                     startCapture()

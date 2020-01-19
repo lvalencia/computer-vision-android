@@ -11,10 +11,8 @@ private const val NO_CAMERA = "NO_CAMERA"
 private const val TAG = "CV\$CAMERA_INFO"
 
 class CameraInfo(
-    val sensorOrientation: Int,
     val imageSize: Size,
-    val cameraId: String,
-    val lensFacing: Int
+    val cameraId: String
 )
 
 fun extractCameraInfo(cameraManager: CameraManager, cameraFacing: Int): CameraInfo {
@@ -22,7 +20,6 @@ fun extractCameraInfo(cameraManager: CameraManager, cameraFacing: Int): CameraIn
     val numberOfCameras = cameraIdList.size
     Log.i(TAG, "Number of cameras on device: $numberOfCameras")
 
-    var sensorOrientation: Int? = null
     var previewSize: Size? = null
     var cameraId: String? = null
 
@@ -35,11 +32,6 @@ fun extractCameraInfo(cameraManager: CameraManager, cameraFacing: Int): CameraIn
         Log.v(TAG, "Lens facing: $lensFacing")
 
         if (lensFacing == cameraFacing) {
-            val orientation: Int? =
-                cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
-            sensorOrientation = orientation ?: 0
-            Log.v(TAG, "Sensor Orientation: $sensorOrientation")
-
             val streamConfigurationMap: StreamConfigurationMap? =
                 cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
 
@@ -50,10 +42,8 @@ fun extractCameraInfo(cameraManager: CameraManager, cameraFacing: Int): CameraIn
     }
 
     return CameraInfo(
-        sensorOrientation ?: 0,
         previewSize ?: Size(0,0),
-        cameraId ?: NO_CAMERA,
-        cameraFacing
+        cameraId ?: NO_CAMERA
     )
 }
 

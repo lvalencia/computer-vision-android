@@ -36,30 +36,45 @@ class ViewTransform(
             }
         }
 
-    fun transform(viewWidth: Int, viewHeight: Int) {
+    fun transform(width: Int, height: Int) {
         Log.i(TAG, "#transform")
         Log.v(TAG, "Current rotation: $rotationInDegrees")
 
+        val viewWidth = width.toFloat()
+        val viewHeight = height.toFloat()
+
+        val previewHeight = previewSize.height.toFloat()
+        val previewWidth = previewSize.width.toFloat()
+
         val matrix = Matrix()
-        val viewRect = RectF(0f, 0f, viewWidth.toFloat(), viewHeight.toFloat())
-        val bufferRect = RectF(0f, 0f, previewSize.height.toFloat(), previewSize.width.toFloat())
-        val centerX = viewRect.centerX()
-        val centerY = viewRect.centerY()
+        val viewRect = RectF(0f, 0f, viewWidth, viewHeight)
+        val bufferRect = RectF(0f, 0f, previewHeight, previewWidth)
+
+        val viewCenterX: Float = viewRect.centerX()
+        val viewCenterY: Float = viewRect.centerY()
+
         if (Surface.ROTATION_90 == rotation || Surface.ROTATION_270 == rotation) {
-            bufferRect.offset(centerX - bufferRect.centerX(), centerY - bufferRect.centerY())
+            val bufferCenterX: Float = bufferRect.centerX()
+            val bufferCenterY: Float = bufferRect.centerY()
+
+            bufferRect.offset(viewCenterX - bufferCenterX, viewCenterY - bufferCenterY)
             matrix.setRectToRect(viewRect, bufferRect, Matrix.ScaleToFit.FILL)
+
             val scale: Float = max(
-                viewHeight.toFloat() / previewSize.height,
-                viewWidth.toFloat() / previewSize.width
+                viewHeight / previewHeight,
+                viewWidth / previewWidth
             )
-            matrix.postScale(scale, scale, centerX, centerY)
-            val calculatedRotation = 90 * (rotation - 2).toFloat()
-            matrix.postRotate(calculatedRotation, centerX, centerY)
-            Log.d(TAG, "#transform Rotated $calculatedRotation degrees")
+            matrix.postScale(scale, scale, viewCenterX, viewCenterY)
+
+            val postRotation = 90f * (rotation - 2).toFloat()
+            matrix.postRotate(postRotation, viewCenterX, viewCenterY)
+
+            Log.d(TAG, "Rotated $postRotation degrees")
         } else if (Surface.ROTATION_180 == rotation) {
-            matrix.postRotate(180f, centerX, centerY)
-            Log.d(TAG, "#transform Rotated 180 degrees")
+            matrix.postRotate(180f, viewCenterX, viewCenterY)
+            Log.d(TAG, "Rotated 180 degrees")
         }
+
         view.setTransform(matrix)
     }
 }

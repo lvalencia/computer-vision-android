@@ -8,8 +8,8 @@ import android.view.TextureView
 fun configureCameraViewSurface(size: Size, view: TextureView): Surface {
     val viewSurfaceTexture: SurfaceTexture = view.surfaceTexture
     viewSurfaceTexture.setDefaultBufferSize(
-        size.getWidth(),
-        size.getHeight()
+        size.width,
+        size.height
     )
     return Surface(viewSurfaceTexture)
 }
