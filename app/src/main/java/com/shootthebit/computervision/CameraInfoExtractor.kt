@@ -13,7 +13,8 @@ private const val TAG = "CV\$CAMERA_INFO"
 class CameraInfo(
     val sensorOrientation: Int,
     val imageSize: Size,
-    val cameraId: String
+    val cameraId: String,
+    val lensFacing: Int
 )
 
 fun extractCameraInfo(cameraManager: CameraManager, cameraFacing: Int): CameraInfo {
@@ -37,7 +38,7 @@ fun extractCameraInfo(cameraManager: CameraManager, cameraFacing: Int): CameraIn
             val orientation: Int? =
                 cameraCharacteristics.get(CameraCharacteristics.SENSOR_ORIENTATION)
             sensorOrientation = orientation ?: 0
-            Log.v(TAG, "Orientation: $sensorOrientation")
+            Log.v(TAG, "Sensor Orientation: $sensorOrientation")
 
             val streamConfigurationMap: StreamConfigurationMap? =
                 cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
@@ -51,7 +52,8 @@ fun extractCameraInfo(cameraManager: CameraManager, cameraFacing: Int): CameraIn
     return CameraInfo(
         sensorOrientation ?: 0,
         previewSize ?: Size(0,0),
-        cameraId ?: NO_CAMERA
+        cameraId ?: NO_CAMERA,
+        cameraFacing
     )
 }
 

@@ -4,8 +4,13 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.hardware.camera2.*
+import android.hardware.camera2.CameraCaptureSession
 import android.hardware.camera2.CameraCaptureSession.CaptureCallback
+import android.hardware.camera2.CameraDevice
+import android.hardware.camera2.CameraManager
+import android.hardware.camera2.CaptureRequest
+import android.hardware.camera2.CaptureResult
+import android.hardware.camera2.TotalCaptureResult
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Process
@@ -13,11 +18,13 @@ import android.util.Log
 import android.view.Surface
 import androidx.core.app.ActivityCompat
 
+
 private const val TAG: String = "CV\$CAMERA_OPERATOR"
 
 class CameraCapture(
     private val context: Context,
-    private val cameraManager: CameraManager
+    private val cameraManager: CameraManager,
+    private val imageOrientation: ImageOrientation
 ) {
     private val deviceStateCallback: CameraDevice.StateCallback
     private val captureCallback: CaptureCallback
@@ -26,16 +33,19 @@ class CameraCapture(
     private lateinit var backgroundThread: HandlerThread
     private lateinit var backgroundHandler: Handler
     private lateinit var cameraDevice: CameraDevice
-    private lateinit var captureRequest:CaptureRequest
+    private lateinit var captureRequest: CaptureRequest
     private lateinit var captureSession: CameraCaptureSession
 
     private val hasPermission: Boolean
         get() {
-            return ActivityCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+            return ActivityCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
         }
 
     init {
-        deviceStateCallback = object: CameraDevice.StateCallback() {
+        deviceStateCallback = object : CameraDevice.StateCallback() {
             override fun onOpened(device: CameraDevice) {
                 cameraDevice = device
                 build()
@@ -90,14 +100,15 @@ class CameraCapture(
     }
 
     private fun build() {
-        val captureRequestBuilder: CaptureRequest.Builder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
+        val captureRequestBuilder: CaptureRequest.Builder =
+            cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
         for (surface: Surface in targetSurfaces) {
             captureRequestBuilder.addTarget(surface)
         }
 
         cameraDevice.createCaptureSession(
             targetSurfaces,
-            object: CameraCaptureSession.StateCallback() {
+            object : CameraCaptureSession.StateCallback() {
                 override fun onConfigureFailed(session: CameraCaptureSession) {
                     Log.e(TAG, "Configuration Failed")
                 }
@@ -114,6 +125,13 @@ class CameraCapture(
                         CaptureRequest.CONTROL_AE_MODE,
                         CaptureRequest.CONTROL_AE_MODE_ON_AUTO_FLASH
                     )
+
+                    /*
+                    captureRequestBuilder.set(
+                        CaptureRequest.JPEG_ORIENTATION,
+                        imageOrientation.calculate()
+                    )
+                     */
 
                     captureRequest = captureRequestBuilder.build()
                     startCapture()
@@ -133,7 +151,11 @@ class CameraCapture(
     }
 
     private fun stopCapture() {
-        captureSession.stopRepeating()
+        try {
+            captureSession.stopRepeating()
+        } catch (e: IllegalStateException) {
+            Log.w(TAG, "${e.message}")
+        }
     }
 
     @SuppressLint("MissingPermission")

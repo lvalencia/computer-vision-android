@@ -9,8 +9,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Surface
 import android.view.TextureView
+import android.view.WindowManager
 import androidx.core.app.ActivityCompat
-import java.util.*
+import java.util.Arrays
 
 private const val TAG: String = "CV\$MAIN_ACTIVITY"
 private const val CAMERA_REQUEST_CODE = 1
@@ -20,6 +21,8 @@ class MainActivity : Activity() {
     private lateinit var cameraManager: CameraManager
     private lateinit var cameraCapture: CameraCapture
     private lateinit var cameraInfo: CameraInfo
+    private lateinit var viewTransform: ViewTransform
+    private lateinit var deviceOrientationListener: DeviceOrientationListener
     private var cameraFacing = CameraCharacteristics.LENS_FACING_FRONT
 
     val surfaces: List<Surface>
@@ -50,10 +53,21 @@ class MainActivity : Activity() {
             cameraFacing
         )
 
+        val windowManager = (getSystemService(Context.WINDOW_SERVICE) as WindowManager)
+
         cameraCapture = CameraCapture(
             this,
-            cameraManager
+            cameraManager,
+            ImageOrientation(windowManager.defaultDisplay.rotation, cameraInfo)
         )
+
+        viewTransform = ViewTransform(
+            windowManager,
+            cameraView,
+            cameraInfo
+        )
+
+        deviceOrientationListener = DeviceOrientationListener(this)
     }
 
     override fun onResume() {
@@ -62,18 +76,33 @@ class MainActivity : Activity() {
 
         if (cameraView.isAvailable) {
             cameraCapture.start(cameraInfo.cameraId, surfaces)
+            viewTransform.transform(cameraView.width, cameraView.height)
         } else {
-            cameraView.surfaceTextureListener = object: TextureView.SurfaceTextureListener {
-                override fun onSurfaceTextureAvailable(surface: SurfaceTexture, width: Int, height: Int) {
+            cameraView.surfaceTextureListener = object : TextureView.SurfaceTextureListener {
+                override fun onSurfaceTextureAvailable(
+                    surface: SurfaceTexture,
+                    width: Int,
+                    height: Int
+                ) {
                     Log.d(TAG, "#onSurfaceTextureAvailable")
                     cameraCapture.start(cameraInfo.cameraId, surfaces)
+                    viewTransform.transform(width, height)
                 }
+
                 override fun onSurfaceTextureDestroyed(surface: SurfaceTexture): Boolean {
                     Log.d(TAG, "#onSurfaceTextureDestroyed")
                     cameraCapture.stop()
                     return true
                 }
-                override fun onSurfaceTextureSizeChanged(surface: SurfaceTexture, width: Int, height: Int) {}
+
+                override fun onSurfaceTextureSizeChanged(
+                    surface: SurfaceTexture,
+                    width: Int,
+                    height: Int
+                ) {
+                    viewTransform.transform(width, height)
+                }
+
                 override fun onSurfaceTextureUpdated(surface: SurfaceTexture) {}
             }
         }
